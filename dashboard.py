@@ -6,7 +6,7 @@ from sklearn.ensemble import RandomForestRegressor
 
 # Function to load the processed data
 @st.cache_data
-def load_data(filepath="data/processed_dataset.csv"):
+def load_data(filepath="casestudy/data/processed_dataset.csv"):
     try:
         data = pd.read_csv(filepath)
         return data
