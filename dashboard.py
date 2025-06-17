@@ -32,25 +32,30 @@ def main():
         st.warning("No data to display. Please ensure the dataset is processed and available.")
         return
 
-# Filter by year
+    # Ensure date column is datetime and extract year
     df['date'] = pd.to_datetime(df['date'])
     df['year'] = df['date'].dt.year
-
-    # Sidebar filter
-    st.sidebar.header("Filter Options")
-    selected_year = st.sidebar.selectbox("Select Year", options=["All"] + sorted(df['year'].dropna().unique().tolist()))
-
-    # Filter by selected year
-    if selected_year != "All":
-        df = df[df['year'] == selected_year]
 
     # Rename columns for display
     df = df.rename(columns={"item_type": "Type of Items", "total_price": "Total Sales (₹)"})
 
-    # Group and sum sales by item type
-    summary = df.groupby("Type of Items")["Total Sales (₹)"].sum().reset_index()
+    # Sidebar filters
+    st.sidebar.header("Filter Options")
 
-# Summary metrics of Total Sales by year
+    # Filter by year
+    st.sidebar.subheader("By Year")
+    selected_year = st.sidebar.selectbox("Select Year", options=["All"] + sorted(df['year'].dropna().unique().tolist()))
+    if selected_year != "All":
+        df = df[df['year'] == selected_year]
+
+    # Filter by time of sale
+    st.sidebar.subheader("By Time of Sale")
+    time_options = ["All"] + sorted(df["time_of_sale"].dropna().unique().tolist())
+    selected_time = st.sidebar.selectbox("Select Time of Sale", options=time_options)
+    if selected_time != "All":
+        df = df[df["time_of_sale"] == selected_time]
+
+    # Display summary metrics of Total Sales
     st.subheader("Summary Metrics")
     total_sales = df["Total Sales (₹)"].sum()
     if selected_year == "All":
@@ -58,13 +63,16 @@ def main():
     else:
         st.metric(f"Total Sales ({selected_year})", f"₹{total_sales:,.2f}")
 
-# Create bar chart using Plotly
+    # Group and sum sales by item type
+    summary = df.groupby("Type of Items")["Total Sales (₹)"].sum().reset_index()
+
+    # Create bar chart using Plotly
     fig = px.bar(
         summary,
         x="Type of Items",
         y="Total Sales (₹)",
         title=f"Total Sales by Type of Items ({'All Years' if selected_year == 'All' else selected_year})",
-        labels={"Total Sales (₹)": "Total Sales (in ₹)", "Type of Items": "Item Type"},
+        labels={"Total Sales (₹)": "Total Sales (₹)", "Type of Items": "Item Type"},
         text_auto=".2s",
         color="Type of Items"
     )
